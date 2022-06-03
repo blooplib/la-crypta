@@ -15,6 +15,14 @@ export const cipherValue = (
   return ciphertextChunks.join("");
 };
 
+export const cipherArray = (
+  key: Buffer,
+  ivSeed: string,
+  values: string[]
+): string[] => {
+  return values.map((value) => cipherValue(key, ivSeed, value));
+};
+
 export const decipherValue = (
   key: Buffer,
   ivSeed: string,
@@ -28,4 +36,12 @@ export const decipherValue = (
   plaintextChunks.push(decipher.update(value, "hex", "utf8"));
   plaintextChunks.push(decipher.final("utf8"));
   return plaintextChunks.join("");
+};
+
+export const decipherArray = (
+  key: Buffer,
+  ivSeed: string,
+  values: string[]
+): string[] => {
+  return values.map((value) => decipherValue(key, ivSeed, value));
 };
