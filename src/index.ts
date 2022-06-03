@@ -20,7 +20,10 @@ export const cipherArray = (
   ivSeed: string,
   values: string[]
 ): string[] => {
-  return values.map((value) => cipherValue(key, ivSeed, value));
+  values.forEach((element: string, idx: number) => {
+    values[idx] = cipherValue(key, ivSeed, element);
+  });
+  return values;
 };
 
 export const decipherValue = (
@@ -43,5 +46,8 @@ export const decipherArray = (
   ivSeed: string,
   values: string[]
 ): string[] => {
-  return values.map((value) => decipherValue(key, ivSeed, value));
+  values.forEach((element: string, idx: number) => {
+    values[idx] = decipherValue(key, ivSeed, element);
+  });
+  return values;
 };

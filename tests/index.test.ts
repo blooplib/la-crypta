@@ -69,7 +69,8 @@ describe("cipher and decipher", () => {
   test("string array", () => {
     keys.forEach((key) => {
       ivSeeds.forEach((ivSeed) => {
-        const ciphered = cipherArray(generateKey(key), ivSeed, plaintexts);
+        const plaintextsCopy = [...plaintexts];
+        const ciphered = cipherArray(generateKey(key), ivSeed, plaintextsCopy);
         const deciphered = decipherArray(generateKey(key), ivSeed, ciphered);
         expect(deciphered).toEqual(plaintexts);
       });
