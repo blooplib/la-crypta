@@ -1,9 +1,4 @@
-import {
-  cipherObject,
-  cipherTerminal,
-  decipherObject,
-  decipherTerminal,
-} from "../src/index";
+import { LaCrypta } from "../src/index";
 import { PropPath } from "../src/types/PropPath";
 import { isNotEmptyStringArray, isString } from "../src/helpers/functions";
 import { ivSeeds, keys, object, Person, plaintexts } from "./helpers/mock";
@@ -12,12 +7,13 @@ import { dotProp, generateKey } from "./helpers/functions";
 describe("cipher and decipher", () => {
   test("string", () => {
     keys.forEach((key) => {
+      const keyBuffer = generateKey(key);
       ivSeeds.forEach((ivSeed) => {
+        const laCrypta: LaCrypta = new LaCrypta(keyBuffer, ivSeed);
         plaintexts.forEach((plaintext) => {
-          const keyBuffer = generateKey(key);
-          const ciphered = cipherTerminal(keyBuffer, ivSeed, plaintext);
+          const ciphered = laCrypta.cipherValue(plaintext);
           expect(ciphered).not.toBe(plaintext);
-          const deciphered = decipherTerminal(keyBuffer, ivSeed, ciphered);
+          const deciphered = laCrypta.decipherValue(ciphered);
           expect(deciphered).toBe(plaintext);
         });
       });
@@ -25,12 +21,13 @@ describe("cipher and decipher", () => {
   });
   test("string array", () => {
     keys.forEach((key) => {
+      const keyBuffer = generateKey(key);
       ivSeeds.forEach((ivSeed) => {
-        const keyBuffer = generateKey(key);
+        const laCrypta: LaCrypta = new LaCrypta(keyBuffer, ivSeed);
         const plaintextsCopy = [...plaintexts];
-        const ciphered = cipherTerminal(keyBuffer, ivSeed, plaintextsCopy);
+        const ciphered = laCrypta.cipherArray(plaintextsCopy);
         expect(ciphered).not.toEqual(plaintexts);
-        const deciphered = decipherTerminal(keyBuffer, ivSeed, ciphered);
+        const deciphered = laCrypta.decipherArray(ciphered);
         expect(deciphered).toEqual(plaintexts);
       });
     });
@@ -45,10 +42,11 @@ describe("cipher and decipher", () => {
       "children.hobbies",
     ];
     keys.forEach((key) => {
+      const keyBuffer = generateKey(key);
       ivSeeds.forEach((ivSeed) => {
-        const keyBuffer = generateKey(key);
+        const laCrypta: LaCrypta = new LaCrypta(keyBuffer, ivSeed);
         const objectCopy = JSON.parse(JSON.stringify(object)) as Person;
-        cipherObject(props, objectCopy, keyBuffer, ivSeed);
+        laCrypta.cipherObject(props, objectCopy);
         props.forEach((prop) => {
           const propObject = dotProp(prop, object);
           const propObjectCopy = dotProp(prop, objectCopy);
@@ -59,7 +57,7 @@ describe("cipher and decipher", () => {
           }
         });
         expect(objectCopy).not.toEqual(object);
-        decipherObject(props, objectCopy, keyBuffer, ivSeed);
+        laCrypta.decipherObject(props, objectCopy);
         props.forEach((prop) => {
           const propObject = dotProp(prop, object);
           const propObjectCopy = dotProp(prop, objectCopy);

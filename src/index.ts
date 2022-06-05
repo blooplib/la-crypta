@@ -1,4 +1,5 @@
 import crypto from "crypto";
+import { CryptoMode } from "./helpers/enums";
 import {
   isNotEmptyObjectArray,
   isNotEmptyStringArray,
@@ -6,137 +7,115 @@ import {
 } from "./helpers/functions";
 import { PropPath } from "./types/PropPath";
 
-export const cipherValue = (
-  key: Buffer,
-  ivSeed: string,
-  value: string
-): string => {
-  const resizedIV = Buffer.allocUnsafe(16);
-  const iv = crypto.createHash("sha256").update(ivSeed).digest();
-  iv.copy(resizedIV);
-  const cipher = crypto.createCipheriv("aes256", key, resizedIV);
-  const ciphertextChunks = [];
-  ciphertextChunks.push(cipher.update(value, "utf8", "hex"));
-  ciphertextChunks.push(cipher.final("hex"));
-  return ciphertextChunks.join("");
-};
+export class LaCrypta {
+  private key: Buffer;
+  private iv: Buffer;
 
-export const cipherArray = (
-  key: Buffer,
-  ivSeed: string,
-  values: string[]
-): string[] => {
-  values.forEach((element: string, idx: number) => {
-    values[idx] = cipherValue(key, ivSeed, element);
-  });
-  return values;
-};
-
-export const decipherValue = (
-  key: Buffer,
-  ivSeed: string,
-  value: string
-): string => {
-  const resizedIV = Buffer.allocUnsafe(16);
-  const iv = crypto.createHash("sha256").update(ivSeed).digest();
-  iv.copy(resizedIV);
-  const decipher = crypto.createDecipheriv("aes256", key, resizedIV);
-  const plaintextChunks = [];
-  plaintextChunks.push(decipher.update(value, "hex", "utf8"));
-  plaintextChunks.push(decipher.final("utf8"));
-  return plaintextChunks.join("");
-};
-
-export const decipherArray = (
-  key: Buffer,
-  ivSeed: string,
-  values: string[]
-): string[] => {
-  values.forEach((element: string, idx: number) => {
-    values[idx] = decipherValue(key, ivSeed, element);
-  });
-  return values;
-};
-
-export const cipherTerminal = (
-  key: Buffer,
-  ivSeed: string,
-  values: string | string[]
-): string | string[] => {
-  if (isString(values)) {
-    return cipherValue(key, ivSeed, values as string);
-  } else if (isNotEmptyStringArray(values)) {
-    return cipherArray(key, ivSeed, values as string[]);
+  constructor(key: Buffer, ivSeed: string) {
+    this.iv = Buffer.allocUnsafe(16);
+    const ivCrypto = crypto.createHash("sha256").update(ivSeed).digest();
+    ivCrypto.copy(this.iv);
+    this.key = key;
   }
-  return values;
-};
 
-export const decipherTerminal = (
-  key: Buffer,
-  ivSeed: string,
-  values: string | string[]
-): string | string[] => {
-  if (isString(values)) {
-    return decipherValue(key, ivSeed, values as string);
-  } else if (isNotEmptyStringArray(values)) {
-    return decipherArray(key, ivSeed, values as string[]);
+  public cipherValue(value: string): string {
+    const cipher = crypto.createCipheriv("aes256", this.key, this.iv);
+    const ciphertextChunks = [];
+    ciphertextChunks.push(cipher.update(value, "utf8", "hex"));
+    ciphertextChunks.push(cipher.final("hex"));
+    return ciphertextChunks.join("");
   }
-  return values;
-};
 
-export const cryptoProp = (
-  path: string,
-  document: Record<string, any>,
-  key: Buffer,
-  ivSeed: string,
-  terminalMode: typeof cipherTerminal & typeof decipherTerminal
-): void => {
-  const props = path.split(".");
-  const propsSize = props.length;
-  for (let i = 1; i < propsSize; i++) {
-    document = document[props[i - 1]];
-    if (document === undefined || document === null) {
-      return;
-    }
-    if (isNotEmptyObjectArray(document)) {
-      path = props.slice(i).join(".");
-      document.forEach((element: Record<string, unknown>) =>
-        cryptoProp(path, element, key, ivSeed, terminalMode)
-      );
-      return;
+  public decipherValue(value: string): string {
+    const decipher = crypto.createDecipheriv("aes256", this.key, this.iv);
+    const plaintextChunks = [];
+    plaintextChunks.push(decipher.update(value, "hex", "utf8"));
+    plaintextChunks.push(decipher.final("utf8"));
+    return plaintextChunks.join("");
+  }
+
+  public cipherArray(values: string[]): string[] {
+    values.forEach((element: string, idx: number) => {
+      values[idx] = this.cipherValue(element);
+    });
+    return values;
+  }
+
+  public decipherArray(values: string[]): string[] {
+    values.forEach((element: string, idx: number) => {
+      values[idx] = this.decipherValue(element);
+    });
+    return values;
+  }
+
+  public cipherObject<T extends Record<string, any>>(
+    fieldsToEncrypt: PropPath<T>[],
+    document: T
+  ): T {
+    return this.cryptoObject(fieldsToEncrypt, document, CryptoMode.ENCRYPT);
+  }
+
+  public decipherObject<T extends Record<string, any>>(
+    fieldsToDecrypt: PropPath<T>[],
+    document: T
+  ): T {
+    return this.cryptoObject(fieldsToDecrypt, document, CryptoMode.DECRYPT);
+  }
+
+  private cryptoTerminal(
+    values: string | string[],
+    mode: CryptoMode
+  ): string | string[] {
+    switch (mode) {
+      case CryptoMode.ENCRYPT:
+        if (isString(values)) {
+          return this.cipherValue(values as string);
+        } else if (isNotEmptyStringArray(values)) {
+          return this.cipherArray(values as string[]);
+        }
+        return values;
+      case CryptoMode.DECRYPT:
+        if (isString(values)) {
+          return this.decipherValue(values as string);
+        } else if (isNotEmptyStringArray(values)) {
+          return this.decipherArray(values as string[]);
+        }
+        return values;
     }
   }
-  const lastElement = props[propsSize - 1];
-  document[lastElement] = terminalMode(key, ivSeed, document[lastElement]);
-};
 
-export const cryptoObject = <T extends Record<string, any>>(
-  fieldsToEncrypt: PropPath<T>[],
-  document: T,
-  key: Buffer,
-  ivSeed: string,
-  terminalMode: typeof cipherTerminal & typeof decipherTerminal
-): T => {
-  fieldsToEncrypt.forEach((path) => {
-    cryptoProp(path, document, key, ivSeed, terminalMode);
-  });
-  return document;
-};
+  private cryptoProp(
+    path: string,
+    document: Record<string, any>,
+    mode: CryptoMode
+  ): void {
+    const props = path.split(".");
+    const propsSize = props.length;
+    for (let i = 1; i < propsSize; i++) {
+      document = document[props[i - 1]];
+      if (document === undefined || document === null) {
+        return;
+      }
+      if (isNotEmptyObjectArray(document)) {
+        path = props.slice(i).join(".");
+        document.forEach((element: Record<string, unknown>) =>
+          this.cryptoProp(path, element, mode)
+        );
+        return;
+      }
+    }
+    const lastElement = props[propsSize - 1];
+    document[lastElement] = this.cryptoTerminal(document[lastElement], mode);
+  }
 
-export const cipherObject = <T extends Record<string, any>>(
-  fieldsToEncrypt: PropPath<T>[],
-  document: T,
-  key: Buffer,
-  ivSeed: string
-): T => {
-  return cryptoObject(fieldsToEncrypt, document, key, ivSeed, cipherTerminal);
-};
-
-export const decipherObject = <T extends Record<string, any>>(
-  fieldsToDecrypt: PropPath<T>[],
-  document: T,
-  key: Buffer,
-  ivSeed: string
-): T => {
-  return cryptoObject(fieldsToDecrypt, document, key, ivSeed, decipherTerminal);
-};
+  private cryptoObject<T extends Record<string, any>>(
+    fieldsToEncrypt: PropPath<T>[],
+    document: T,
+    mode: CryptoMode
+  ): T {
+    fieldsToEncrypt.forEach((path) => {
+      this.cryptoProp(path, document, mode);
+    });
+    return document;
+  }
+}
