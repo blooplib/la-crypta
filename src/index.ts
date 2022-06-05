@@ -3,7 +3,7 @@ import {
   isNotEmptyObjectArray,
   isNotEmptyStringArray,
   isString,
-} from "./helpers/types";
+} from "./helpers/functions";
 
 export const cipherValue = (
   key: Buffer,
