@@ -1,4 +1,4 @@
-import { cipherTerminal, cryptoProp, decipherTerminal } from "../src/index";
+import { cipherTerminal, cryptoObject, decipherTerminal } from "../src/index";
 import { PropPath } from "../src/types/PropPath";
 import { isNotEmptyStringArray, isString } from "../src/helpers/functions";
 import { ivSeeds, keys, object, Person, plaintexts } from "./helpers/mock";
@@ -42,10 +42,9 @@ describe("cipher and decipher", () => {
     keys.forEach((key) => {
       ivSeeds.forEach((ivSeed) => {
         const keyBuffer = generateKey(key);
-        const objectCopy = JSON.parse(JSON.stringify(object));
-
+        const objectCopy = JSON.parse(JSON.stringify(object)) as Person;
+        cryptoObject(props, objectCopy, keyBuffer, ivSeed, cipherTerminal);
         props.forEach((prop) => {
-          cryptoProp(prop, objectCopy, keyBuffer, ivSeed, cipherTerminal);
           const propObject = dotProp(prop, object);
           const propObjectCopy = dotProp(prop, objectCopy);
           if (isNotEmptyStringArray(propObject)) {
@@ -55,8 +54,8 @@ describe("cipher and decipher", () => {
           }
         });
         expect(objectCopy).not.toEqual(object);
+        cryptoObject(props, objectCopy, keyBuffer, ivSeed, decipherTerminal);
         props.forEach((prop) => {
-          cryptoProp(prop, objectCopy, keyBuffer, ivSeed, decipherTerminal);
           const propObject = dotProp(prop, object);
           const propObjectCopy = dotProp(prop, objectCopy);
           if (isNotEmptyStringArray(propObject)) {

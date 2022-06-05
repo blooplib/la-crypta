@@ -4,6 +4,7 @@ import {
   isNotEmptyStringArray,
   isString,
 } from "./helpers/functions";
+import { PropPath } from "./types/PropPath";
 
 export const cipherValue = (
   key: Buffer,
@@ -107,4 +108,17 @@ export const cryptoProp = (
   }
   const lastElement = props[propsSize - 1];
   document[lastElement] = terminalMode(key, ivSeed, document[lastElement]);
+};
+
+export const cryptoObject = <T extends Record<string, any>>(
+  fieldsToEncrypt: PropPath<T>[],
+  document: T,
+  key: Buffer,
+  ivSeed: string,
+  terminalMode: typeof cipherTerminal & typeof decipherTerminal
+): T => {
+  fieldsToEncrypt.forEach((path) => {
+    cryptoProp(path, document, key, ivSeed, terminalMode);
+  });
+  return document;
 };
