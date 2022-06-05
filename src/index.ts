@@ -122,3 +122,21 @@ export const cryptoObject = <T extends Record<string, any>>(
   });
   return document;
 };
+
+export const cipherObject = <T extends Record<string, any>>(
+  fieldsToEncrypt: PropPath<T>[],
+  document: T,
+  key: Buffer,
+  ivSeed: string
+): T => {
+  return cryptoObject(fieldsToEncrypt, document, key, ivSeed, cipherTerminal);
+};
+
+export const decipherObject = <T extends Record<string, any>>(
+  fieldsToDecrypt: PropPath<T>[],
+  document: T,
+  key: Buffer,
+  ivSeed: string
+): T => {
+  return cryptoObject(fieldsToDecrypt, document, key, ivSeed, decipherTerminal);
+};

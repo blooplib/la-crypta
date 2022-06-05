@@ -1,4 +1,9 @@
-import { cipherTerminal, cryptoObject, decipherTerminal } from "../src/index";
+import {
+  cipherObject,
+  cipherTerminal,
+  decipherObject,
+  decipherTerminal,
+} from "../src/index";
 import { PropPath } from "../src/types/PropPath";
 import { isNotEmptyStringArray, isString } from "../src/helpers/functions";
 import { ivSeeds, keys, object, Person, plaintexts } from "./helpers/mock";
@@ -43,7 +48,7 @@ describe("cipher and decipher", () => {
       ivSeeds.forEach((ivSeed) => {
         const keyBuffer = generateKey(key);
         const objectCopy = JSON.parse(JSON.stringify(object)) as Person;
-        cryptoObject(props, objectCopy, keyBuffer, ivSeed, cipherTerminal);
+        cipherObject(props, objectCopy, keyBuffer, ivSeed);
         props.forEach((prop) => {
           const propObject = dotProp(prop, object);
           const propObjectCopy = dotProp(prop, objectCopy);
@@ -54,7 +59,7 @@ describe("cipher and decipher", () => {
           }
         });
         expect(objectCopy).not.toEqual(object);
-        cryptoObject(props, objectCopy, keyBuffer, ivSeed, decipherTerminal);
+        decipherObject(props, objectCopy, keyBuffer, ivSeed);
         props.forEach((prop) => {
           const propObject = dotProp(prop, object);
           const propObjectCopy = dotProp(prop, objectCopy);
