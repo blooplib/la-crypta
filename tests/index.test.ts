@@ -1,5 +1,5 @@
 import { LaCrypta } from "../src/index";
-import { PropPath } from "../src/types/PropPath";
+import { PropPath } from "../src/helpers/types";
 import { isNotEmptyStringArray, isString } from "../src/helpers/functions";
 import { ivSeeds, keys, object, Person, plaintexts } from "./helpers/mock";
 import { dotProp, generateKey } from "./helpers/functions";

@@ -5,7 +5,7 @@ import {
   isNotEmptyStringArray,
   isString,
 } from "./helpers/functions";
-import { PropPath } from "./types/PropPath";
+import { PropPath } from "./helpers/types";
 
 export class LaCrypta {
   private key: Buffer;
