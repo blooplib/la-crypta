@@ -5,14 +5,19 @@
   "keywords": [
     "crypto",
     "aes",
-    "prop",
-    "object",
+    "aes256",
     "client-side-encryption",
-    "node.js",
     "encrypt",
     "decrypt",
     "cipher",
-    "decipher"
+    "decipher",
+    "node.js",
+    "ts",
+    "typescript",
+    "object",
+    "prop",
+    "property",
+    "field"
   ],
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
